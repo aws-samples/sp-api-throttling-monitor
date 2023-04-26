@@ -1,0 +1,68 @@
+Resources:
+  MyLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return("Hello Lambda")
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      Timeout: 10
+      MemorySize: 256
+      Role: !GetAtt MyLambdaFunctionRole.Arn
+  MyLambdaFunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: "MyLambdaFunctionPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+  MyLambdaLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: "/aws/lambda/MyLambdaFunction"
+      RetentionInDays: 30
+  MySNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: "My SNS Topic"
+      TopicName: "MySNSTopic"
+  MySNSSubscription:
+    Type: "AWS::SNS::Subscription"
+    Properties:
+      Protocol: "email"
+      TopicArn: !Ref MySNSTopic
+      Endpoint: "youremail@example.com"
+  MyCloudWatchAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: "MyCloudWatchAlarm"
+      AlarmDescription: "API Error alarm"
+      AlarmActions:
+        - !Ref MySNSTopic
+      MetricName: "API Error"
+      Namespace: "Custom"
+      Dimensions:
+        - Name: "FunctionName"
+          Value: !Sub "${MyLambdaFunction}"
+      Statistic: "Sum"
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"

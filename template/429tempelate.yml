@@ -6,7 +6,7 @@ Resources:
         ZipFile: |
           def lambda_handler(event, context):
               return("Hello Lambda")
-      Handler: index.lambda_handler
+      Handler: lambda_function.lambda_handler
       Runtime: python3.8
       Timeout: 10
       MemorySize: 256
@@ -29,6 +29,8 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
+                  - "sts:AssumeRole"
+                  - "cloudwatch:PutMetricData"
                   - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
@@ -48,7 +50,7 @@ Resources:
     Properties:
       Protocol: "email"
       TopicArn: !Ref MySNSTopic
-      Endpoint: "youremail@example.com"
+      Endpoint: "aonag@amazon.com"
   MyCloudWatchAlarm:
     Type: "AWS::CloudWatch::Alarm"
     Properties:
